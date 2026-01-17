@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Layering Prompt Assembler v3.0</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 750px;
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .section-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #007bff;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .section-title span { margin-right: 8px; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #555; }
+        
+        /* 共通スタイル */
+        textarea, select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: monospace;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+        
+        /* 衣装レイヤーエリアのスタイル */
+        .layer-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .clothing-box {
+            margin-bottom: 5px;
+        }
+        .clothing-box textarea {
+            height: 60px; /* 少し高さを抑えめに */
+            border-left: 5px solid #007bff; /* 視覚的に衣装だとわかるように */
+        }
+        .connector-box {
+            margin: 5px 0 15px 0;
+            padding-left: 20px; /* インデント */
+            position: relative;
+        }
+        .connector-box::before {
+            content: "🔗"; /* アイコン */
+            position: absolute;
+            left: 0;
+            top: 8px;
+        }
+        .connector-box input {
+            background-color: #fffbe6; /* 薄い黄色で接続詞だとわかりやすく */
+            border-color: #ffe58f;
+        }
+
+        /* 構図エリアのグリッド */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* ボタン類 */
+        button#generateBtn {
+            width: 100%;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        button#generateBtn:hover { background-color: #0056b3; }
+        
+        .output-group {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .copy-btn-container { display: flex; justify-content: flex-end; margin-bottom: 5px; }
+        button#copyBtn {
+            padding: 8px 16px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;
+        }
+        button#copyBtn:hover { background-color: #218838; }
+        #finalPrompt { height: 120px; background-color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>AI Layering Prompt Assembler v3</h2>
+
+    <div class="section-title"><span>📷</span> Composition & Position</div>
+    <div class="controls-grid">
+        <div>
+            <label>Distance</label>
+            <select id="shotType">
+                <option value="">指定なし</option>
+                <option value="extreme close-up">Extreme Close-up</option>
+                <option value="close-up">Close-up</option>
+                <option value="upper body">Upper Body</option>
+                <option value="cowboy shot">Cowboy Shot</option>
+                <option value="full body">Full Body</option>
+                <option value="wide angle shot">Wide Angle</option>
+            </select>
+        </div>
+        <div>
+            <label>Position (LR)</label>
+            <select id="hPosition">
+                <option value="">指定なし</option>
+                <option value="centered">Centered</option>
+                <option value="standing on the right">On the Right</option>
+                <option value="standing on the left">On the Left</option>
+            </select>
+        </div>
+        <div>
+            <label>Angle</label>
+            <select id="camAngle">
+                <option value="">指定なし</option>
+                <option value="eye level">Eye Level</option>
+                <option value="low angle">Low Angle</option>
+                <option value="high angle">High Angle</option>
+                <option value="from above">From Above</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="section-title"><span>👗</span> Layered Clothing (重ね着)</div>
+    <div class="layer-container">
+        
+        <div class="clothing-box">
+            <label>Clothing 1 (Main/Outer or Inner)</label>
+            <textarea id="cloth1" placeholder="例: white sheer shirt"></textarea>
+        </div>
+
+        <div class="connector-box">
+            <input type="text" id="conn1" placeholder="Connector (例: worn over / worn under / with)">
+        </div>
+
+        <div class="clothing-box">
+            <label>Clothing 2</label>
+            <textarea id="cloth2" placeholder="例: navy blue bikini top"></textarea>
+        </div>
+
+        <div class="connector-box">
+            <input type="text" id="conn2" placeholder="Connector (例: visible underneath / matching with)">
+        </div>
+
+        <div class="clothing-box">
+            <label>Clothing 3</label>
+            <textarea id="cloth3" placeholder="例: silver navel piercing"></textarea>
+        </div>
+
+    </div>
+
+    <div class="section-title"><span>🏙️</span> Detail & Background</div>
+    <label>Custom Position</label>
+    <input type="text" id="customPosInput" placeholder="例: standing by the window...">
+    
+    <label style="margin-top:10px;">Background</label>
+    <textarea id="backgroundInput" placeholder="例: indoors, morning light..."></textarea>
+
+    <button id="generateBtn">LINK PROMPTS (連結生成)</button>
+
+    <div class="output-group">
+        <div class="copy-btn-container">
+            <button id="copyBtn">📋 Copy</button>
+        </div>
+        <textarea id="finalPrompt" readonly></textarea>
+    </div>
+
+</div>
+
+<script>
+    const generateBtn = document.getElementById('generateBtn');
+    const finalPromptOutput = document.getElementById('finalPrompt');
+    const copyBtn = document.getElementById('copyBtn');
+
+    function generateCombinedPrompt() {
+        let parts = [];
+
+        // 1. 構図・位置
+        const shot = document.getElementById('shotType').value;
+        const pos = document.getElementById('hPosition').value;
+        const angle = document.getElementById('camAngle').value;
+        if (shot) parts.push(shot);
+        if (angle) parts.push(angle);
+        if (pos) parts.push(pos);
+
+        // 2. 衣装レイヤーの構築 (スペースで繋ぐ)
+        let clothingParts = [];
+        
+        const c1 = document.getElementById('cloth1').value.trim();
+        const conn1 = document.getElementById('conn1').value.trim();
+        const c2 = document.getElementById('cloth2').value.trim();
+        const conn2 = document.getElementById('conn2').value.trim();
+        const c3 = document.getElementById('cloth3').value.trim();
+
+        // ロジック: 値がある場合のみ追加する
+        if (c1) clothingParts.push(c1);
+        
+        // 衣装1と衣装2がある場合、その間に接続詞を入れる
+        if (c2) {
+            if (conn1) clothingParts.push(conn1); // 接続詞があれば追加
+            clothingParts.push(c2);
+        }
+
+        // 衣装2(または1)と衣装3がある場合
+        if (c3) {
+            // 直前の要素が接続詞で終わっていないかチェックは省略(ユーザー入力依存)
+            // 接続詞2があれば追加
+            if (conn2) clothingParts.push(conn2);
+            clothingParts.push(c3);
+        }
+
+        // 衣装ブロックを結合（スペース区切り）して、メインの配列に追加
+        if (clothingParts.length > 0) {
+            parts.push(clothingParts.join(' ')); 
+        }
+
+        // 3. 詳細位置・背景
+        const customPos = document.getElementById('customPosInput').value.trim();
+        const bg = document.getElementById('backgroundInput').value.trim();
+        if (customPos) parts.push(customPos);
+        if (bg) parts.push(bg);
+
+        // 最終結合 (カンマ区切り)
+        finalPromptOutput.value = parts.join(', ');
+    }
+
+    // コピー機能
+    function copyToClipboard() {
+        if (!finalPromptOutput.value) return;
+        finalPromptOutput.select();
+        finalPromptOutput.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(finalPromptOutput.value)
+            .then(() => {
+                const originalText = copyBtn.innerText;
+                copyBtn.innerText = '✅ Copied!';
+                setTimeout(() => copyBtn.innerText = originalText, 1500);
+            })
+            .catch(err => alert('コピー失敗'));
+    }
+
+    generateBtn.addEventListener('click', generateCombinedPrompt);
+    copyBtn.addEventListener('click', copyToClipboard);
+</script>
+
+</body>
+</html>
