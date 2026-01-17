@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Master (安全版)</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 安全版専用のデザイン調整 */
+        .safe-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            vertical-align: middle;
+            margin-left: 10px;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+        header h1 { color: #fff; }
+        .mode-switch label { font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>AI Prompt Master <span class="safe-badge">🔰 安全版 (Safe Mode)</span></h1>
+            <div class="mode-switch">
+                <label><input type="radio" name="aiMode" value="local" checked> Local AI (タグ形式)</label>
+                <label><input type="radio" name="aiMode" value="gemini"> Gemini / DALL-E (文章形式)</label>
+            </div>
+        </header>
+
+        <div class="tab-menu">
+            <button class="tab-btn active" data-tab="tab-base">1. 基本・画質</button>
+            <button class="tab-btn" data-tab="tab-char">2. 人物・衣装</button>
+            <button class="tab-btn" data-tab="tab-pose">3. ポーズ</button>
+            <button class="tab-btn" data-tab="tab-bg">4. 背景・場所</button>
+        </div>
+
+        <div id="tab-base" class="tab-content active">
+            <h3>🎨 画風とアングル</h3>
+            <label>画風 (Art Style)</label><select id="artStyle"></select>
+            <div class="grid-2">
+                <div><label>カメラアングル</label><select id="camera"></select></div>
+                <div><label>照明・ライティング</label><select id="lighting"></select></div>
+            </div>
+            <label>画質・質感</label><select id="quality"></select>
+        </div>
+
+        <div id="tab-char" class="tab-content">
+            <h3>🦸 人物と衣装の設定</h3>
+            <label>ベースの人物</label><select id="charBase"></select>
+            
+            <div class="grid-2">
+                <div><label>髪型</label><select id="charHair"></select></div>
+                <div><label style="color:#bb86fc;">顔プリセット (一括)</label><select id="facePresetSelect"></select></div>
+            </div>
+
+            <div style="background:#252525; padding:10px; border-radius:8px; margin-bottom:15px; border:1px solid #444;">
+                <label style="font-size:0.8em; color:#888;">顔の微調整 (詳細)</label>
+                <div class="grid-2">
+                    <div><select id="faceEye"></select></div>
+                    <div><select id="faceMouth"></select></div>
+                    <div><select id="faceShape"></select></div>
+                    <div><select id="faceSkin"></select></div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div><label>体型</label><select id="charBody"></select></div>
+                <div><label>胸のサイズ</label><select id="charBust"></select></div>
+            </div>
+            
+            <label style="margin-top:10px;">人物の自由記述 (任意)</label>
+            <textarea id="charDesc" placeholder="例: 赤いリボン, 泣きぼくろ, 銀のアクセサリー..." style="height:60px;"></textarea>
+
+            <h3 style="margin-top:20px; border-top:1px solid #333; padding-top:15px;">👗 衣装設定 (Safe)</h3>
+            <div class="grid-2">
+                <div><label>衣装を選択</label><select id="outfitSelect"></select></div>
+                <div><label>着こなし・密着度</label><select id="outfitFit"></select></div>
+            </div>
+            <label>衣装の自由記述 (任意)</label>
+            <textarea id="outfitDesc" placeholder="例: ダメージジーンズ, 前を開けたジャケット..." style="height:60px;"></textarea>
+            
+            <div id="negativeSection">
+                <label style="margin-top:15px; color:#ff6b6b; display:block; border-top:1px solid #333; padding-top:10px;">⛔ ネガティブプロンプト (Localのみ)</label>
+                <textarea id="negDesc" placeholder="例: 眼鏡, 髭, モノクロ..."></textarea>
+            </div>
+        </div>
+
+        <div id="tab-pose" class="tab-content">
+            <h3>🧘 ポーズとアクション</h3>
+            <div class="grid-2">
+                <div><label>基本ポーズ</label><select id="basePose"></select></div>
+                <div><label style="color:#bb86fc;">体の向き</label><select id="facing"></select></div>
+            </div>
+            <label>足のポーズ</label><select id="legPose"></select>
+            <div class="grid-2">
+                <div><label>右手</label><select id="rightHand"></select></div>
+                <div><label>左手</label><select id="leftHand"></select></div>
+            </div>
+        </div>
+
+        <div id="tab-bg" class="tab-content">
+            <h3>🪑 背景と場所</h3>
+            <label style="color:#bb86fc;">場所を選択</label><select id="location"></select>
+            
+            <div class="grid-2" style="margin-top:10px;">
+                <div><label>家具・オブジェクト</label><select id="objType"></select></div>
+                <div><label>家具の詳細 (素材等)</label><input type="text" id="objDetail" placeholder="例: 革製の..."></div>
+            </div>
+            <label>背景の自由記述 (詳細)</label>
+            <textarea id="bgDesc" placeholder="例: 高級な寝室, 温泉..."></textarea>
+        </div>
+
+        <div class="output-area">
+            <textarea id="finalPrompt" readonly placeholder="ここにプロンプトが生成されます..."></textarea>
+            <button id="copyBtn">プロンプトをコピー</button>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
